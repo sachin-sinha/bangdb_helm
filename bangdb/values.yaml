@@ -5,13 +5,13 @@
 replicaCount: 1
 
 image:
-  repository: bangdb/bangdb
-  tag: bangdb/bangdb-service-2
+  repository: bangdb/bangdb-server-2
+  tag: latest
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
-nameOverride: "BangDB-instance"
-fullnameOverride: "BangDB-chart"
+nameOverride: "bangdb-instance"
+fullnameOverride: "bangdb"
 
 serviceAccount:
   # Specifies whether a service account should be created
