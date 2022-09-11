@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: bangdb/bangdb-server-2
+  repository: bangdb/bangdb-server
   tag: latest
   pullPolicy: IfNotPresent
 
@@ -23,22 +23,32 @@ serviceAccount:
 podSecurityContext: {}
   # fsGroup: 2000
 
+
 securityContext: {}
   # capabilities:
   #   drop:
   #   - ALL
   # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
+  fsGroupChangePolicy: OnRootMismatch
+  runAsNonRoot: true
+  supplementalGroups:
+  - 1000
   # runAsUser: 1000
 
 service:
   type: NodePort
-  port: 10101
+  ports:
+          - port: 10101
+            targetPort: 10101
+            nodePort: 10101
+          - port: 18080
+            targetPort: 18080
+            nodePort: 18080
 
 ingress:
   enabled: false
   annotations: {}
-    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/ingress.class: bangdb
     # kubernetes.io/tls-acme: "true"
   hosts:
     - host: chart-example.local
@@ -54,9 +64,10 @@ resources: {}
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
+  limits:
+     cpu: 4
+     memory: 8Gi
+     storage: 100Gi
   # requests:
   #   cpu: 100m
   #   memory: 128Mi

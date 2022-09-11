@@ -11,6 +11,10 @@ spec:
       targetPort: 10101
       protocol: TCP
       name: tcp-10101
+    - port: {{ .Values.service.port }}
+      targetPort: 18080
+      protocol: TCP
+      name: tcp-18080
   selector:
     app.kubernetes.io/name: {{ include "bangdb-chart.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
