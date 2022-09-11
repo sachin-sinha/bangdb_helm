@@ -10,18 +10,22 @@ ARG BANGDB_TARBALL_LOC=https://bangdb.com/downloads/bangdb_2.0_ubuntu18.tar.gz
 ARG BANGDB_TARBALL=bangdb_2.0_ubuntu18.tar.gz
 ARG BANGDB_DIR=/bangdb_2.0_ubuntu18
 
-RUN wget --no-check-certificate $BANGDB_TARBALL_LOC \
+RUN wget $BANGDB_TARBALL_LOC \
 	  && tar -xzvf $BANGDB_TARBALL \
 		&& chmod -R 775 $BANGDB_DIR
 
 RUN mkdir $BANGDB_DIR/bin/data \
-    && mkdir $BANGDB_DIR/bin/logdir
-
-VOLUME $BANGDB_DIR/bin/data $BANGDB_DIR/bin/logdir
-
-RUN chown -R bangdb:bangdb $BANGDB_DIR/bin/data \
+    && mkdir $BANGDB_DIR/bin/logdir \
+    && mkdir $BANGDB_DIR/bin/archive \
+    && mkdir $BANGDB_DIR/bin/reclaim_dir \
+    && chown -R bangdb:bangdb $BANGDB_DIR/bin/data \
     && chown -R bangdb:bangdb $BANGDB_DIR/bin/logdir \
-    && chmod +x $BANGDB_DIR/install.sh \
+    && chown -R bangdb:bangdb $BANGDB_DIR/bin/archive \
+    && chown -R bangdb:bangdb $BANGDB_DIR/bin/reclaim_dir
+
+VOLUME $BANGDB_DIR/bin/data $BANGDB_DIR/bin/logdir $BANGDB_DIR/bin/archive $BANGDB_DIR/bin/reclaim_dir
+
+RUN chmod +x $BANGDB_DIR/install.sh \
     && chmod +x $BANGDB_DIR/bangdb-server \
 		&& chmod +x $BANGDB_DIR/bangdb-server-ssl
 
