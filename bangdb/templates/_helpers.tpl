@@ -54,3 +54,35 @@ Create the name of the service account to use
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Return the proper Storage Class
+*/}}
+{{- define "bangdb.storageClass" -}}
+    {{- if .Values.persistence.storageClass -}}
+        {{- if (eq "-" .Values.persistence.storageClass) -}}
+            {{- printf "storageClassName: \"\"" -}}
+        {{- else }}
+            {{- printf "storageClassName: %s" .Values.persistence.storageClass -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+
+{{/*
+Create a default fully qualified name for Ampere
+*/}}
+{{- define "bangdb-chart.ampere.fullname" -}}
+{{ template "bangdb-chart.fullname" . }}-{{ .Values.ampere.name }}
+{{- end -}}
+
+{{/*
+Create the name of the service account to use for the ampere component
+*/}}
+
+{{- define "bangdb-chart.serviceAccountName.ampere" -}}
+{{- if .Values.ampere.serviceAccount.create -}}
+    {{ default (include "bangdb-chart.fullname" .) .Values.ampere.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.ampere.serviceAccount.name }}
+{{- end -}}
+{{- end -}}

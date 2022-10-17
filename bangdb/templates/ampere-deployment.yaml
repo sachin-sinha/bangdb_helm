@@ -1,0 +1,99 @@
+{{- if .Values.ampere.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bangdb-chart.fullname" . }}-{{ .Values.ampere.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "bangdb-chart.labels" . | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "bangdb-chart.name" . }}-{{ .Values.ampere.name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  replicas: {{ .Values.ampere.replicas }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "bangdb-chart.name" . }}-{{ .Values.ampere.name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with .Values.ampere.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ template "bangdb-chart.serviceAccountName.ampere" . }}
+      {{- with .Values.ampere.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ampere.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ampere.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      # initContainers:
+      #   - name: wait-bangdb
+      #     image: alpine: 3.8
+      #     imagePullPolicy: IfNotPresent
+      #     command: 
+      #       - sh
+      #       - -c
+      #       - |
+      #         until printf "." && nc -z -w 2 {{ template "bangdb-chart.fullname" . }} {{ .Values.service.port18080 }}; do
+      #             sleep 2;
+      #         done;
+      #         echo 'Bangdb is up';
+      containers:
+        - name: ampere
+          image: "{{ .Values.ampere.image.repository }}:{{ .Values.ampere.image.tag }}"
+          imagePullPolicy: {{ .Values.ampere.image.pullPolicy | quote }}
+          env:
+            - name: ANALYZE
+              value: "false"
+            - name: APP_ENV
+              value: "production"
+            - name: NEXT_PUBLIC_APPSTORE_URL
+              value: "https://testappstore.bangdb.com"
+            - name: USER_API
+              value: "{{ include "bangdb-chart.fullname" . }}-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.service.port18080 }}"
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: 443
+          #     scheme: HTTPS
+              # httpHeaders:
+              #   - name: X-Forwarded-Proto
+              #     value: https
+              #   - name: X-Forwarded-Host
+              #     value: localhost
+              #   - name: Host
+              #     value: localhost
+          #   initialDelaySeconds: 10
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: 443
+          #     scheme: HTTPS
+              # httpHeaders:
+              # - name: X-Forwarded-Proto
+              #   value: https
+              # - name: X-Forwarded-Host
+              #   value: localhost
+              # - name: Host
+              #   value: localhost
+            # initialDelaySeconds: 90
+          {{- if .Values.ampere.securityContext.enabled }}
+          securityContext:
+            runAsUser: {{ .Values.ampere.securityContext.runAsUser }}
+          {{- end }}
+          resources:
+{{ toYaml .Values.ampere.resources | indent 12 }}
+          ports:
+            - containerPort: 443
+              name: https
+{{- end }}
+    

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bangdb-chart.fullname" . }}-headless
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "bangdb-chart.labels" . | indent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: bangdb-10101
+      port: {{ .Values.service.port10101 }}
+      protocol: TCP
+      targetPort: 10101
+    - name: bangdb-18080
+      port: {{ .Values.service.port18080 }}
+      protocol: TCP
+      targetPort: 18080
+  selector:
+    app.kubernetes.io/name: {{ include "bangdb-chart.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
