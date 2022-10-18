@@ -65,10 +65,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ template "bangdb-chart.serviceAccountName" . }}
-      {{- if .Values.securityContext.enabled }}
-      securityContext:
-        fsGroup: {{ .Values.securityContext.fsGroup }}
-      {{- end }}
+      # {{- if .Values.securityContext.enabled }}
+      # securityContext:
+      #   fsGroup: {{ .Values.securityContext.fsGroup }}
+      # {{- end }}
       initContainers:
       {{- if .Values.persistence.enabled }}
         - name: init-chmod-data
@@ -79,7 +79,13 @@ spec:
           {{- end }}
           command: ["chown", "-R", "{{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.fsGroup }}", "{{ .Values.persistence.mountPathdata }}", "{{ .Values.persistence.mountPathlogdir }}"]
           securityContext:
-            runAsUser: 0
+            runAsUser: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             - name: {{ include "bangdb-chart.name" . }}-data
               mountPath: {{ .Values.persistence.mountPathdata }}
@@ -113,11 +119,19 @@ spec:
             - name: {{ include "bangdb-chart.name" . }}-logdir
               mountPath: {{ .Values.persistence.mountPathlogdir }}
           {{- end }}
-          {{- if .Values.securityContext.enabled }}
+          # {{- if .Values.securityContext.enabled }}
+          # securityContext:
+          #   # runAsNonRoot: true
+          #   # runAsUser: {{ .Values.securityContext.runAsUser }}
+          # {{- end }}
           securityContext:
-            # runAsNonRoot: true
-            # runAsUser: {{ .Values.securityContext.runAsUser }}
-          {{- end }}
+            runAsUser: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop: ["ALL"]
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:

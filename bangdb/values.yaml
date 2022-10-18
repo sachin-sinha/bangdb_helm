@@ -20,7 +20,7 @@ updateStrategy:
 
 serviceAccount:
   # Specifies whether a service account should be created
-  create: false
+  create: true
   name:
 
 podSecurityContext: {}
