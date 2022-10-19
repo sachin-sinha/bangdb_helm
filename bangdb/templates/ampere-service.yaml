@@ -21,11 +21,11 @@ spec:
     {{end}}
   {{end}}
   ports:
-    - name: https
+    - name: http
       port: {{ .Values.ampere.service.port }}
-      {{- if and .Values.ampere.service.httpsNodePort (eq .Values.ampere.service.serviceType "NodePort") }}
-      nodePort: {{ .Values.ampere.service.httpsNodePort }}
+      {{- if and .Values.ampere.service.httpNodePort (eq .Values.ampere.service.serviceType "NodePort") }}
+      nodePort: {{ .Values.ampere.service.httpNodePort }}
       {{- end }}
-      targetPort: https
+      targetPort: 3000
 {{- end -}}
      

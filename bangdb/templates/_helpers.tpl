@@ -81,7 +81,7 @@ Create the name of the service account to use for the ampere component
 
 {{- define "bangdb-chart.serviceAccountName.ampere" -}}
 {{- if .Values.ampere.serviceAccount.create -}}
-    {{ default (include "bangdb-chart.fullname" .) .Values.ampere.serviceAccount.name }}
+    {{ default (include "bangdb-chart.ampere.fullname" .) .Values.ampere.serviceAccount.name }}
 {{- else -}}
     {{ default "default" .Values.ampere.serviceAccount.name }}
 {{- end -}}

@@ -1,11 +1,7 @@
 {{- if .Values.ampere.ingress.enabled -}}
 {{- $fullName := include "bangdb-chart.ampere.fullname" . -}} 
 {{- $svcPort := .Values.ampere.service.port -}}
-{{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
-apiVersion: networking.k8s.io/v1beta1
-{{- else -}}
-apiVersion: extensions/v1beta1
-{{- end }}
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ $fullName }}
@@ -27,15 +23,25 @@ spec:
   {{- end }}
 {{- end }}
   rules:
-  {{- range .Values.ampere.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: testampere.info
       http:
         paths:
-        {{- range .paths }}
-          - path: {{ . }}
+          - path: /
+            pathType: Prefix
             backend:
-              serviceName: {{ include "bangdb-chart.fullname" . }}-{{ .Values.ampere.name }}-service
-              servicePort: {{ $svcPort }}
-        {{- end }}
-  {{- end }}
+              service:
+                name: {{ include "bangdb-chart.fullname" . }}-{{ .Values.ampere.name }}-service
+                port:
+                  number: 3000
+  # {{- range .Values.ampere.ingress.hosts }}
+  #   - host: {{ .host | quote }}
+  #     http:
+  #       paths:
+  #       {{- range .paths }}
+  #         - path: {{ . }}
+  #           backend:
+  #             serviceName: {{ include "bangdb-chart.fullname" . }}-{{ .Values.ampere.name }}-service
+  #             servicePort: {{ $svcPort }}
+  #       {{- end }}
+  # {{- end }}
 {{- end }}

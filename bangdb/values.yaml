@@ -54,10 +54,14 @@ service:
   type: ClusterIP
   port10101: 10101
   port18080: 18080
+  userserviceType: NodePort
+  httpNodePort: 30921
+  loadBalancerIP: {}
+  loadBalancerSourceRanges: {}
 
 
 ingress:
-  enabled: false
+  enabled: true
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
@@ -89,21 +93,21 @@ ampere:
   name: ampere
   serviceAccount:
   # Specifies whether a service account should be created
-    create: false
+    create: true
     name:
   replicas: 1
   imagePullSecrets: []
   ingress:
-    enabled: false
+    enabled: true
     annotations: {}
     hosts:
       - host: test.local
         paths: []
     tls: []
   service:
-    port: 443
+    port: 3000
     serviceType: NodePort
-    httpsNodePort: 30920
+    httpNodePort: 30920
     loadBalancerIP: {}
     loadBalancerSourceRanges: {}
   securityContext:

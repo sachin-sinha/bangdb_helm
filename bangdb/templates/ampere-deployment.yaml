@@ -59,32 +59,19 @@ spec:
             - name: NEXT_PUBLIC_APPSTORE_URL
               value: "https://testappstore.bangdb.com"
             - name: USER_API
+              # value: "testuser.bangdb.com:18080"
               value: "{{ include "bangdb-chart.fullname" . }}-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.service.port18080 }}"
           readinessProbe:
             httpGet:
               path: /
-              port: 443
+              port: 3000
               scheme: HTTPS
-              httpHeaders:
-                - name: X-Forwarded-Proto
-                  value: https
-                - name: X-Forwarded-Host
-                  value: localhost
-                - name: Host
-                  value: localhost
             initialDelaySeconds: 10
           livenessProbe:
             httpGet:
               path: /
-              port: 443
+              port: 3000
               scheme: HTTPS
-              httpHeaders:
-              - name: X-Forwarded-Proto
-                value: https
-              - name: X-Forwarded-Host
-                value: localhost
-              - name: Host
-                value: localhost
             initialDelaySeconds: 90
           # {{- if .Values.ampere.securityContext.enabled }}
           # securityContext:
@@ -101,7 +88,7 @@ spec:
           resources:
 {{ toYaml .Values.ampere.resources | indent 12 }}
           ports:
-            - containerPort: 443
-              name: https
+            - containerPort: 3000
+              name: http
 {{- end }}
     
