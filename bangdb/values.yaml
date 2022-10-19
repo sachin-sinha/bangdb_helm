@@ -4,6 +4,8 @@
 
 replicaCount: 1
 
+clusterDomain: cluster.local
+
 image:
   repository: bangdb/bangdb-server
   tag: latest
@@ -13,27 +15,46 @@ imagePullSecrets: []
 nameOverride: "bangdb-instance"
 fullnameOverride: "bangdb"
 
+updateStrategy:
+  type: RollingUpdate
+
 serviceAccount:
   # Specifies whether a service account should be created
-  create: false
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  create: true
   name:
 
 podSecurityContext: {}
-  # fsGroup: 2000
+  # fsGroup: 1000
+  # fsGroupChangePolicy: OnRootMismatch
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+securityContext:
+  enabled: true
+  fsGroup: 0
+  # fsGroupChangePolicy: OnRootMismatch
+  runAsUser: 1000
+  # supplementalGroups: [bangdb,1000]
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+  capabilities:
+    drop: ["ALL"]
+
+persistence:
+  enabled: true
+  # existingClaim:
+  mountPathdata: /bangdb_2.0_ubuntu18/bin/data
+  mountPathlogdir: /bangdb_2.0_ubuntu18/bin/logdir
+  # storageClass: "-"
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+  annotations: {}
 
 service:
-  type: NodePort
-  port: 10101
+  type: ClusterIP
+  port10101: 10101
+  port18080: 18080
+
 
 ingress:
   enabled: false
@@ -49,20 +70,67 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+resources: 
+  limits:
+    cpu: 250m
+    memory: 256Mi
+  requests:
+    cpu: 250m
+    memory: 128Mi
 
 nodeSelector: {}
 
 tolerations: []
 
 affinity: {}
+
+ampere:
+  enabled: true
+  name: ampere
+  serviceAccount:
+  # Specifies whether a service account should be created
+    create: false
+    name:
+  replicas: 1
+  imagePullSecrets: []
+  ingress:
+    enabled: false
+    annotations: {}
+    hosts:
+      - host: test.local
+        paths: []
+    tls: []
+  service:
+    port: 443
+    serviceType: NodePort
+    httpsNodePort: 30920
+    loadBalancerIP: {}
+    loadBalancerSourceRanges: {}
+  securityContext:
+    enabled: false
+    fsGroup: 0
+    fsGroupChangePolicy: OnRootMismatch
+    runAsUser: 1000
+    supplementalGroups: ["apprunner"]
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop: ["ALL"]
+  image:
+    repository: bangdb/bangdb-ampere
+    tag: latest
+    pullPolicy: Always
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  antiAffinity: "soft"
+  updateStrategy:
+    type: RollingUpdate
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"

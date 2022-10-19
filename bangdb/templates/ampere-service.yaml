@@ -1,0 +1,31 @@
+{{- if .Values.ampere.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bangdb-chart.fullname" . }}-{{ .Values.ampere.name }}-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "bangdb-chart.labels" . | indent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: {{ include "bangdb-chart.name" . }}-{{ .Values.ampere.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  type: {{ .Values.ampere.service.serviceType }}
+  {{- if .Values.ampere.service.loadBalancerIP }}
+  loadBalancerIP: "{{ .Values.ampere.service.loadBalancerIP }}"
+  {{- end }}
+  {{if .Values.ampere.service.loadBalancerSourceRanges}}
+  loadBalancerSourceRanges:
+    {{range $rangeList := .Values.ampere.service.loadBalancerSourceRanges}}
+    - {{ $rangeList }}
+    {{end}}
+  {{end}}
+  ports:
+    - name: https
+      port: {{ .Values.ampere.service.port }}
+      {{- if and .Values.ampere.service.httpsNodePort (eq .Values.ampere.service.serviceType "NodePort") }}
+      nodePort: {{ .Values.ampere.service.httpsNodePort }}
+      {{- end }}
+      targetPort: https
+{{- end -}}
+     

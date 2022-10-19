@@ -1,0 +1,52 @@
+kind: SecurityContextConstraints
+apiVersion: security.openshift.io/v1
+metadata:
+  name: scc-bangdb
+  annotations:
+    include.release.openshift.io/ibm-cloud-managed: "true"
+    include.release.openshift.io/self-managed-high-availability: "true"
+    include.release.openshift.io/single-node-developer: "true"
+    kubernetes.io/description: Custom SCC for bangdb
+  generation: 1
+allowPrivilegedContainer: false
+defaultAddCapabilities: []
+requiredDropCapabilities:
+  - ALL
+readOnlyRootFilesystem: false
+runAsUser:
+  type: MustRunAs
+  uidRangeMin: 1000
+  uidRangeMax: 1000
+seLinuxContext:
+  type: RunAsAny
+fsGroup:
+  type: MustRunAs
+  ranges:
+   - min: 1000
+     max: 1000
+supplementalGroups:
+  type: MustRunAs
+  ranges:
+   - min: 1000
+     max: 1000
+seccompProfiles:
+  - '*'
+groups:
+  - system:cluster-admins
+users: 
+  - system:cluster-admins
+priority: 10
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: false
+volumes:
+  - configMap
+  - downwardAPI
+  - emptyDir
+  - persistentVolumeClaim
+  - projected
+  - secret
