@@ -23,7 +23,7 @@ spec:
   {{- end }}
 {{- end }}
   rules:
-    - host: testampere.info
+    - host: testampere.bangdb.com
       http:
         paths:
           - path: /
@@ -32,7 +32,7 @@ spec:
               service:
                 name: {{ include "bangdb-chart.fullname" . }}-{{ .Values.ampere.name }}-service
                 port:
-                  number: 3000
+                  name: http
   # {{- range .Values.ampere.ingress.hosts }}
   #   - host: {{ .host | quote }}
   #     http:

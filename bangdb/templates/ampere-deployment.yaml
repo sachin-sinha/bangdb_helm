@@ -18,6 +18,10 @@ spec:
         app.kubernetes.io/name: {{ include "bangdb-chart.name" . }}-{{ .Values.ampere.name }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      volumes:
+        - name: ampere-ssl
+          secret:
+            secretName: ampere-ssl
       {{- with .Values.ampere.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -35,32 +39,12 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      # initContainers:
-      #   - name: wait-bangdb
-      #     image: alpine: 3.8
-      #     imagePullPolicy: IfNotPresent
-      #     command: 
-      #       - sh
-      #       - -c
-      #       - |
-      #         until printf "." && nc -z -w 2 {{ template "bangdb-chart.fullname" . }} {{ .Values.service.port18080 }}; do
-      #             sleep 2;
-      #         done;
-      #         echo 'Bangdb is up';
       containers:
         - name: ampere
           image: "{{ .Values.ampere.image.repository }}:{{ .Values.ampere.image.tag }}"
           imagePullPolicy: {{ .Values.ampere.image.pullPolicy | quote }}
           env:
-            - name: ANALYZE
-              value: "false"
-            - name: APP_ENV
-              value: "production"
-            - name: NEXT_PUBLIC_APPSTORE_URL
-              value: "https://testappstore.bangdb.com"
-            - name: USER_API
-              # value: "testuser.bangdb.com:18080"
-              value: "{{ include "bangdb-chart.fullname" . }}-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.service.port18080 }}"
+{{ toYaml .Values.ampere.env | indent 12 }}
           readinessProbe:
             httpGet:
               path: /
@@ -73,10 +57,10 @@ spec:
               port: 3000
               scheme: HTTPS
             initialDelaySeconds: 90
-          # {{- if .Values.ampere.securityContext.enabled }}
-          # securityContext:
-          #   runAsUser: {{ .Values.ampere.securityContext.runAsUser }}
-          # {{- end }}
+          volumeMounts:
+            - name: ampere-ssl
+              mountPath: {{ .Values.ampere.secrets.mountPath }}
+              readOnly: true
           securityContext:
             runAsUser: 1000
             runAsNonRoot: true

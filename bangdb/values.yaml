@@ -9,11 +9,14 @@ clusterDomain: cluster.local
 image:
   repository: bangdb/bangdb-server
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 imagePullSecrets: []
 nameOverride: "bangdb-instance"
 fullnameOverride: "bangdb"
+
+secrets:
+  mountPath: "/bangdb_2.0_ubuntu18/bin/certificate"
 
 updateStrategy:
   type: RollingUpdate
@@ -88,6 +91,68 @@ tolerations: []
 
 affinity: {}
 
+userservice:
+  enabled: true
+  name: userservice
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+  imagePullSecrets: []
+  serviceAccount:
+    create: true
+    name:
+  secrets:
+    mountPath: "/bangdb_2.0_ubuntu18/bin/certificate"
+  image:
+    repository: bangdb/bangdb-server
+    tag: latest
+    pullPolicy: Always
+  ingress:
+    enabled: false
+    annotations: {}
+    hosts:
+      - host: test.local
+        paths: []
+    tls: []
+  service:
+    type: ClusterIP
+    port10101: 10101
+    port18080: 18080
+    userserviceType: NodePort
+    httpNodePort: 30921
+    loadBalancerIP: {}
+    loadBalancerSourceRanges: {}
+  resources: 
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 250m
+      memory: 128Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  securityContext:
+    enabled: true
+    fsGroup: 0
+    # fsGroupChangePolicy: OnRootMismatch
+    runAsUser: 1000
+    # supplementalGroups: [bangdb,1000]
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop: ["ALL"]
+  persistence:
+    enabled: true
+    # existingClaim:
+    mountPathdata: /bangdb_2.0_ubuntu18/bin/data
+    mountPathlogdir: /bangdb_2.0_ubuntu18/bin/logdir
+    # storageClass: "-"
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    annotations: {}
 ampere:
   enabled: true
   name: ampere
@@ -97,6 +162,8 @@ ampere:
     name:
   replicas: 1
   imagePullSecrets: []
+  secrets:
+    mountPath: "/home/node/app/certificate"
   ingress:
     enabled: true
     annotations: {}
@@ -138,3 +205,13 @@ ampere:
     requests:
       cpu: "500m"
       memory: "512Mi"
+  env:
+    - name: ANALYZE
+      value: "false"
+    - name: APP_ENV
+      value: "production"
+    - name: NEXT_PUBLIC_APPSTORE_URL
+      value: "https://userbangdb.bangdb.com:30922"
+    - name: USER_API
+      value: "userbangdb.bangdb.com:30922"
+      # value: "{{ include "bangdb-chart.fullname" . }}-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.service.port18080 }}"

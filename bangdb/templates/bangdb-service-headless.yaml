@@ -6,17 +6,19 @@ metadata:
   labels:
 {{ include "bangdb-chart.labels" . | indent 4 }}
 spec:
-  type: ClusterIP
-  clusterIP: None
+  type: NodePort
+  externalTrafficPolicy: Local
   ports:
     - name: bangdb-10101
       port: {{ .Values.service.port10101 }}
       protocol: TCP
       targetPort: 10101
+      nodePort: 30923
     - name: bangdb-18080
       port: {{ .Values.service.port18080 }}
       protocol: TCP
       targetPort: 18080
+      nodePort: 30924
   selector:
     app.kubernetes.io/name: {{ include "bangdb-chart.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}

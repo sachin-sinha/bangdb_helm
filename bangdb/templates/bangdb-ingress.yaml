@@ -23,16 +23,27 @@ spec:
   {{- end }}
 {{- end }}
   rules:
-    - host: testbangdb.info
+    - host: testbangdb.bangdb.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "bangdb-chart.fullname" . }}-user-service
+                name: {{ template "bangdb-chart.fullname" . }}-headless
                 port:
-                  number: 18080
+                  name: bangdb-18080
+    - host: userbangdb.bangdb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ template "bangdb-chart.fullname" . }}-{{ .Values.userservice.name }}-headless
+                port:
+                  name: bangdb-18080
+
   # {{- range .Values.ingress.hosts }}
   #   - host: {{ .host | quote }}
   #     http:

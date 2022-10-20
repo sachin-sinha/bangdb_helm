@@ -1,0 +1,22 @@
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: use-scc-bangdb-userservice-role
+rules:
+  - apiGroups: ["security.openshift.io"]
+    resources: ["securitycontextconstraints"]
+    resourceNames: ["scc-bangdb"]
+    verbs: ["use"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: use-scc-bangdb-userservice-rolebinding
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "bangdb-chart.userservice.serviceAccountName" . }}
+roleRef:
+  kind: Role
+  name: use-scc-bangdb-userservice-role
+  apiGroup: rbac.authorization.k8s.io

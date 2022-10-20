@@ -65,33 +65,6 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ template "bangdb-chart.serviceAccountName" . }}
-      # {{- if .Values.securityContext.enabled }}
-      # securityContext:
-      #   fsGroup: {{ .Values.securityContext.fsGroup }}
-      # {{- end }}
-      initContainers:
-      {{- if .Values.persistence.enabled }}
-        - name: init-chmod-data
-          image: bitnami/minideb:buster
-          imagePullPolicy: Always
-          {{- if .Values.resources }}
-          resources: {{- toYaml .Values.resources | nindent 12 }}
-          {{- end }}
-          command: ["chown", "-R", "{{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.fsGroup }}", "{{ .Values.persistence.mountPathdata }}", "{{ .Values.persistence.mountPathlogdir }}"]
-          securityContext:
-            runAsUser: 1000
-            runAsNonRoot: true
-            allowPrivilegeEscalation: false
-            seccompProfile:
-              type: RuntimeDefault
-            capabilities:
-              drop: ["ALL"]
-          volumeMounts:
-            - name: {{ include "bangdb-chart.name" . }}-data
-              mountPath: {{ .Values.persistence.mountPathdata }}
-            - name: {{ include "bangdb-chart.name" . }}-logdir
-              mountPath: {{ .Values.persistence.mountPathlogdir }}
-      {{- end }}
       volumes:
       {{- if and .Values.persistence.enabled .Values.persistence.existingClaim }}
         - name: {{ include "bangdb-chart.name" . }}-data
@@ -110,6 +83,9 @@ spec:
         - name: {{ include "bangdb-chart.name" . }}-logdir
           emptyDir: {}
       {{- end }}
+        - name: bangdb-ssl
+          secret:
+            secretName: bangdb-ssl
       containers:
         - name: {{ .Chart.Name }}
           volumeMounts:
@@ -119,6 +95,9 @@ spec:
             - name: {{ include "bangdb-chart.name" . }}-logdir
               mountPath: {{ .Values.persistence.mountPathlogdir }}
           {{- end }}
+            - name: bangdb-ssl
+              mountPath: {{ .Values.secrets.mountPath }}
+              readOnly: true 
           # {{- if .Values.securityContext.enabled }}
           # securityContext:
           #   # runAsNonRoot: true

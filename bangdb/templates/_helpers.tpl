@@ -54,7 +54,22 @@ Create the name of the service account to use
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
-
+{{/*
+Create a default fully qualified name for Ampere
+*/}}
+{{- define "bangdb-chart.userservice.fullname" -}}
+{{ template "bangdb-chart.fullname" . }}-{{ .Values.userservice.name }}
+{{- end -}}
+{{/*
+Create the name of the user service account to use
+*/}}
+{{- define "bangdb-chart.userservice.serviceAccountName" -}}
+{{- if .Values.userservice.serviceAccount.create -}}
+    {{ default (include "bangdb-chart.userservice.fullname" .) .Values.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.userservice.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
 {{/*
 Return the proper Storage Class
 */}}

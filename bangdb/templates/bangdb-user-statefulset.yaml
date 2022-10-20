@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "bangdb-chart.fullname" . }}-{{ .Values.userservice.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "bangdb-chart.labels" . | indent 4 }}
+spec:
+  serviceName: {{ template "bangdb-chart.fullname" . }}-{{ .Values.userservice.name }}-headless
+  replicas: {{ .Values.replicaCount }}
+  updateStrategy:
+    type: {{ .Values.userservice.updateStrategy.type }}
+    {{- if (eq "Recreate" .Values.userservice.updateStrategy.type) }}
+    rollingUpdate: null
+    {{- end }}
+  {{- if and .Values.userservice.persistence.enabled (not .Values.userservice.persistence.existingClaim) }}
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ include "bangdb-chart.name" . }}-{{ .Values.userservice.name }}-data
+      {{- with .Values.userservice.persistence.annotations }}
+        annotations:
+        {{- range $key, $value := . }}
+          {{ $key }}: {{ $value }}
+        {{- end }}
+      {{- end }}
+      spec:
+        accessModes:
+        {{- range .Values.userservice.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.userservice.persistence.size | quote }}
+        {{ include "bangdb.storageClass" . }}
+    - metadata:
+        name: {{ include "bangdb-chart.name" . }}-{{ .Values.userservice.name }}-logdir
+      {{- with .Values.userservice.persistence.annotations }}
+        annotations:
+        {{- range $key, $value := . }}
+          {{ $key }}: {{ $value }}
+        {{- end }}
+      {{- end }}
+      spec:
+        accessModes:
+        {{- range .Values.userservice.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.userservice.persistence.size | quote }}
+        {{ include "bangdb.storageClass" . }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "bangdb-chart.name" . }}-{{ .Values.userservice.name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "bangdb-chart.name" . }}-{{ .Values.userservice.name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with .Values.userservice.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ template "bangdb-chart.userservice.serviceAccountName" . }}
+      volumes:
+      {{- if and .Values.userservice.persistence.enabled .Values.userservice.persistence.existingClaim }}
+        - name: {{ include "bangdb-chart.name" . }}-{{ .Values.userservice.name }}-data
+          persistentVolumeClaim:
+          {{- with .Values.userservice.persistence.existingClaim }}
+            claimName: {{ tpl . $ }}
+          {{- end }}
+        - name: {{ include "bangdb-chart.name" . }}-{{ .Values.userservice.name }}-logdir
+          persistentVolumeClaim:
+          {{- with .Values.userservice.persistence.existingClaim }}
+            claimName: {{ tpl . $ }}
+          {{- end }}
+      {{- else if not .Values.userservice.persistence.enabled }}
+        - name: {{ include "bangdb-chart.name" . }}-{{ .Values.userservice.name }}-data
+          emptyDir: {}
+        - name: {{ include "bangdb-chart.name" . }}-{{ .Values.userservice.name }}-logdir
+          emptyDir: {}
+      {{- end }}
+        - name: bangdb-user-ssl
+          secret:
+            secretName: bangdb-user-ssl
+      containers:
+        - name: {{ .Chart.Name }}-{{ .Values.userservice.name }}
+          volumeMounts:
+          {{- if .Values.userservice.persistence.enabled }}
+            - name: {{ include "bangdb-chart.name" . }}-{{ .Values.userservice.name }}-data
+              mountPath: {{ .Values.userservice.persistence.mountPathdata }}
+            - name: {{ include "bangdb-chart.name" . }}-{{ .Values.userservice.name }}-logdir
+              mountPath: {{ .Values.userservice.persistence.mountPathlogdir }}
+          {{- end }}
+            - name: bangdb-user-ssl
+              mountPath: {{ .Values.userservice.secrets.mountPath }}
+              readOnly: true 
+          # {{- if .Values.securityContext.enabled }}
+          # securityContext:
+          #   # runAsNonRoot: true
+          #   # runAsUser: {{ .Values.securityContext.runAsUser }}
+          # {{- end }}
+          securityContext:
+            runAsUser: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop: ["ALL"]
+          image: "{{ .Values.userservice.image.repository }}:{{ .Values.userservice.image.tag }}"
+          imagePullPolicy: {{ .Values.userservice.image.pullPolicy }}
+          ports:
+            - containerPort: 10101
+              protocol: TCP
+            - containerPort: 18080
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.userservice.resources | nindent 12 }}
+      {{- with .Values.userservice.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.userservice.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.userservice.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
